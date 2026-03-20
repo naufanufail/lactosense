@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>LactoSense — Sweat-Based Cardiometabolic Detection</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet" />
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ivory:#F8FAFC;--silver:#E2E8F0;--slate:#0F172A;
+  --teal:#14B8A6;--indigo:#6366F1;--coral:#F97316;--red:#EF4444;
+}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--ivory);color:var(--slate);overflow-x:hidden}
+.serif{font-family:'DM Serif Display',serif}
+
+@keyframes dropFall{0%{transform:translateY(-20px) scale(.8);opacity:0}60%{transform:translateY(4px) scale(1.05);opacity:1}100%{transform:translateY(0) scale(1);opacity:1}}
+@keyframes ripple{0%{transform:translate(-50%,-50%) scale(.8);opacity:.8}100%{transform:translate(-50%,-50%) scale(2.5);opacity:0}}
+@keyframes pulseDot{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.4);opacity:.6}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+@keyframes blinkCursor{0%,100%{opacity:1}50%{opacity:0}}
+@keyframes particleFloat{0%{transform:translateY(0) translateX(0);opacity:.6}33%{transform:translateY(-12px) translateX(6px);opacity:1}66%{transform:translateY(-6px) translateX(-4px);opacity:.8}100%{transform:translateY(0) translateX(0);opacity:.6}}
+
+.particle{position:absolute;border-radius:50%;animation:particleFloat ease-in-out infinite}
+.fade-up{animation:fadeUp .7s ease forwards}
+.swipe-container{overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;display:flex;gap:16px;padding-bottom:8px}
+.swipe-container::-webkit-scrollbar{display:none}
+.swipe-card{scroll-snap-align:start;flex-shrink:0}
+.nav-dot{width:7px;height:7px;border-radius:50%;cursor:pointer;transition:all .3s ease}
+.nav-dot.active{background:var(--teal)!important;transform:scale(1.3)}
+.slider-track{appearance:none;-webkit-appearance:none;width:100%;height:6px;border-radius:9999px;outline:none;cursor:pointer}
+.slider-track::-webkit-slider-thumb{appearance:none;width:20px;height:20px;border-radius:50%;background:var(--teal);cursor:pointer;box-shadow:0 2px 8px rgba(20,184,166,.4);transition:transform .2s}
+.slider-track::-webkit-slider-thumb:hover{transform:scale(1.2)}
+.card-hover{transition:transform .3s ease,box-shadow .3s ease}
+.card-hover:hover{transform:translateY(-4px);box-shadow:0 20px 40px rgba(15,23,42,.1)}
+.btn-primary{background:linear-gradient(135deg,var(--teal),var(--indigo));color:white;border:none;padding:14px 32px;border-radius:100px;font-family:'DM Sans',sans-serif;font-weight:600;font-size:15px;cursor:pointer;transition:all .3s ease;letter-spacing:.01em}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(20,184,166,.35)}
+.btn-primary:active{transform:translateY(0)}
+.btn-primary:disabled{opacity:.6;cursor:not-allowed;transform:none}
+.choice-btn{border:1.5px solid var(--silver);background:white;padding:12px 20px;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:all .25s ease;color:var(--slate)}
+.choice-btn:hover{border-color:var(--teal);color:var(--teal)}
+.section-label{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--teal)}
+.tag{display:inline-block;padding:4px 12px;border-radius:100px;font-size:12px;font-weight:600;letter-spacing:.04em}
+section{padding:80px 0}
+.section-inner{max-width:680px;margin:0 auto;padding:0 20px}
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:14px 20px;transition:all .3s ease;display:flex;justify-content:space-between;align-items:center}
+nav.scrolled{background:rgba(248,250,252,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--silver)}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="navbar">
+  <div style="display:flex;align-items:center;gap:8px">
+    <div style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#14B8A6,#6366F1);display:flex;align-items:center;justify-content:center;font-size:14px">💧</div>
+    <span id="nav-brand" style="font-weight:700;font-size:14px;color:white">LactoSense</span>
+  </div>
+  <button class="btn-primary" style="font-size:12px;padding:8px 16px" onclick="scrollTo('analysis')">Assess Risk</button>
+</nav>
+
+<!-- HERO -->
+<section id="hero" style="min-height:100vh;background:linear-gradient(160deg,#0F172A 0%,#1a2744 60%,#0f2030 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;position:relative;overflow:hidden;text-align:center">
+  <!-- particles -->
+  <div class="particle" style="width:4px;height:4px;background:#14B8A640;top:10%;left:5%;animation-duration:3s;animation-delay:0s"></div>
+  <div class="particle" style="width:7px;height:7px;background:#6366F140;top:21%;left:17%;animation-duration:3.7s;animation-delay:.4s"></div>
+  <div class="particle" style="width:10px;height:10px;background:#14B8A640;top:32%;left:29%;animation-duration:4.4s;animation-delay:.8s"></div>
+  <div class="particle" style="width:4px;height:4px;background:#6366F140;top:43%;left:41%;animation-duration:5.1s;animation-delay:1.2s"></div>
+  <div class="particle" style="width:7px;height:7px;background:#14B8A640;top:54%;left:53%;animation-duration:5.8s;animation-delay:1.6s"></div>
+  <div class="particle" style="width:10px;height:10px;background:#6366F140;top:65%;left:65%;animation-duration:6.5s;animation-delay:2s"></div>
+  <div class="particle" style="width:4px;height:4px;background:#14B8A640;top:76%;left:77%;animation-duration:7.2s;animation-delay:2.4s"></div>
+  <div class="particle" style="width:7px;height:7px;background:#6366F140;top:87%;left:89%;animation-duration:7.9s;animation-delay:2.8s"></div>
+
+  <!-- Drop animation -->
+  <div style="position:relative;width:160px;height:160px;margin-bottom:40px">
+    <div id="ripple1" style="display:none;position:absolute;top:50%;left:50%;width:100px;height:100px;border-radius:50%;border:2px solid #14B8A6;transform:translate(-50%,-50%);animation:ripple 2s ease-out infinite"></div>
+    <div id="ripple2" style="display:none;position:absolute;top:50%;left:50%;width:100px;height:100px;border-radius:50%;border:2px solid #14B8A6;transform:translate(-50%,-50%);animation:ripple 2s ease-out .6s infinite"></div>
+    <div id="hero-drop" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:64px;height:64px;background:linear-gradient(135deg,#60b8ff,#a0d8ff);border-radius:50% 50% 50% 50% / 60% 60% 40% 40%;display:flex;align-items:center;justify-content:center;opacity:0;transition:all 1s cubic-bezier(.34,1.56,.64,1);box-shadow:0 0 20px rgba(96,184,255,.4)">
+      <div id="mol-dot" style="width:10px;height:10px;border-radius:50%;background:white"></div>
+    </div>
+    <div id="wave1" style="display:none;position:absolute;top:50%;left:50%;width:30px;height:30px;border-radius:50%;border:1px solid #14B8A630;transform:translate(-50%,-50%)"></div>
+    <div id="wave2" style="display:none;position:absolute;top:50%;left:50%;width:50px;height:50px;border-radius:50%;border:1px solid #14B8A630;transform:translate(-50%,-50%)"></div>
+    <div id="wave3" style="display:none;position:absolute;top:50%;left:50%;width:70px;height:70px;border-radius:50%;border:1px solid #14B8A630;transform:translate(-50%,-50%)"></div>
+  </div>
+
+  <div style="animation:fadeUp .8s .6s both">
+    <p style="font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#14B8A6;margin-bottom:16px">Sweat-Based Lactate Biosensing</p>
+    <h1 class="serif" style="font-size:clamp(28px,7vw,52px);color:white;line-height:1.15;margin-bottom:20px;max-width:560px">
+      Understanding Your Metabolism,<br/>
+      <em style="color:#14B8A6">One Drop of Sweat</em> Away
+    </h1>
+    <p style="color:#94A3B8;font-size:16px;line-height:1.7;max-width:480px;margin:0 auto 36px">
+      A non-invasive approach to early detection of cardiometabolic disorders through real-time sweat lactate monitoring.
+    </p>
+    <button class="btn-primary" onclick="scrollTo('what-is')">Explore the Science →</button>
+  </div>
+
+  <div style="position:absolute;bottom:32px;left:50%;transform:translateX(-50%);opacity:.4;text-align:center">
+    <div style="width:1px;height:40px;background:#14B8A6;margin:0 auto 6px;animation:pulseDot 2s infinite"></div>
+    <p style="font-size:10px;color:white;letter-spacing:.1em">SCROLL</p>
+  </div>
+</section>
+
+<!-- 1. WHAT IS CMD -->
+<section id="what-is" style="background:var(--ivory)">
+  <div class="section-inner">
+    <p class="section-label" style="margin-bottom:12px">01 — Cardiometabolic Disorders</p>
+    <h2 class="serif" style="font-size:clamp(24px,5vw,38px);line-height:1.2;margin-bottom:8px">When the body's balance breaks</h2>
+    <p style="color:#64748B;font-size:15px;line-height:1.7;margin-bottom:32px">Cardiometabolic disorders are interconnected conditions that disrupt the heart, blood vessels, and metabolic system — often developing silently for years.</p>
+    <div class="swipe-container" id="cmd-scroll">
+      <div class="swipe-card card-hover" style="width:calc(100vw - 56px);max-width:480px;background:white;border-radius:20px;padding:28px 24px;border:1px solid var(--silver)">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+          <div style="width:48px;height:48px;border-radius:14px;background:#EF444415;display:flex;align-items:center;justify-content:center;font-size:22px;color:#EF4444">♥</div>
+          <div><div style="font-size:12px;font-weight:600;color:#EF4444;letter-spacing:.06em;margin-bottom:2px">CARDIOVASCULAR</div><h3 style="font-size:18px;font-weight:600">Heart Disease</h3></div>
+        </div>
+        <p style="color:#475569;font-size:14px;line-height:1.75;margin-bottom:16px">Conditions affecting the heart's structure and function — including coronary artery disease, heart failure, and arrhythmias. Globally responsible for over 17 million deaths per year.</p>
+        <div style="background:#EF444410;border-radius:10px;padding:8px 14px;display:inline-block"><span style="font-size:12px;font-weight:600;color:#EF4444">#1 cause of death worldwide</span></div>
+      </div>
+      <div class="swipe-card card-hover" style="width:calc(100vw - 56px);max-width:480px;background:white;border-radius:20px;padding:28px 24px;border:1px solid var(--silver)">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+          <div style="width:48px;height:48px;border-radius:14px;background:#F9731615;display:flex;align-items:center;justify-content:center;font-size:22px;color:#F97316">⬡</div>
+          <div><div style="font-size:12px;font-weight:600;color:#F97316;letter-spacing:.06em;margin-bottom:2px">METABOLIC</div><h3 style="font-size:18px;font-weight:600">Type 2 Diabetes</h3></div>
+        </div>
+        <p style="color:#475569;font-size:14px;line-height:1.75;margin-bottom:16px">A chronic metabolic condition where cells become resistant to insulin, causing elevated blood glucose. Affects 537 million adults worldwide and rising rapidly.</p>
+        <div style="background:#F9731610;border-radius:10px;padding:8px 14px;display:inline-block"><span style="font-size:12px;font-weight:600;color:#F97316">537M affected globally</span></div>
+      </div>
+      <div class="swipe-card card-hover" style="width:calc(100vw - 56px);max-width:480px;background:white;border-radius:20px;padding:28px 24px;border:1px solid var(--silver)">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+          <div style="width:48px;height:48px;border-radius:14px;background:#6366F115;display:flex;align-items:center;justify-content:center;font-size:22px;color:#6366F1">⚖</div>
+          <div><div style="font-size:12px;font-weight:600;color:#6366F1;letter-spacing:.06em;margin-bottom:2px">SYNDROME</div><h3 style="font-size:18px;font-weight:600">Metabolic Syndrome</h3></div>
+        </div>
+        <p style="color:#475569;font-size:14px;line-height:1.75;margin-bottom:16px">A cluster of conditions — abdominal obesity, high blood pressure, high blood sugar, and abnormal lipid levels — that occur together, increasing your risk of heart disease and stroke.</p>
+        <div style="background:#6366F110;border-radius:10px;padding:8px 14px;display:inline-block"><span style="font-size:12px;font-weight:600;color:#6366F1">1 in 3 adults in some regions</span></div>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:center;gap:6px;margin-top:16px" id="cmd-dots">
+      <div class="nav-dot active" style="background:#14B8A6" onclick="cmdDot(0)"></div>
+      <div class="nav-dot" style="background:var(--silver)" onclick="cmdDot(1)"></div>
+      <div class="nav-dot" style="background:var(--silver)" onclick="cmdDot(2)"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 2. WHAT GOES WRONG -->
+<section id="what-goes-wrong" style="background:white">
+  <div class="section-inner">
+    <p class="section-label" style="margin-bottom:12px">02 — Metabolic Disruption</p>
+    <h2 class="serif" style="font-size:clamp(24px,5vw,38px);line-height:1.2;margin-bottom:8px">What goes wrong inside</h2>
+    <p style="color:#64748B;font-size:15px;line-height:1.7;margin-bottom:32px">Adjust the sliders to simulate how lifestyle factors shift your metabolic risk profile.</p>
+    <div style="display:flex;flex-direction:column;gap:24px;margin-bottom:32px">
+      <div style="background:var(--ivory);border-radius:16px;padding:20px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <div style="display:flex;align-items:center;gap:8px"><span style="font-size:18px">🩸</span><span style="font-weight:600;font-size:15px">Blood Sugar</span></div>
+          <div style="text-align:right"><span id="sugar-val" style="font-weight:700;font-size:18px;color:#F97316">50</span><span style="font-size:11px;color:#94A3B8;margin-left:4px">↑ elevated</span></div>
+        </div>
+        <input type="range" min="0" max="100" value="50" class="slider-track" id="sugar-slider" oninput="updateSliders()" style="background:linear-gradient(to right,#F97316 50%,var(--silver) 50%)">
+      </div>
+      <div style="background:var(--ivory);border-radius:16px;padding:20px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <div style="display:flex;align-items:center;gap:8px"><span style="font-size:18px">🏃</span><span style="font-weight:600;font-size:15px">Physical Activity</span></div>
+          <div style="text-align:right"><span id="activity-val" style="font-weight:700;font-size:18px;color:#14B8A6">50</span><span style="font-size:11px;color:#94A3B8;margin-left:4px">↓ sedentary</span></div>
+        </div>
+        <input type="range" min="0" max="100" value="50" class="slider-track" id="activity-slider" oninput="updateSliders()" style="background:linear-gradient(to right,#14B8A6 50%,var(--silver) 50%)">
+      </div>
+      <div style="background:var(--ivory);border-radius:16px;padding:20px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <div style="display:flex;align-items:center;gap:8px"><span style="font-size:18px">💨</span><span style="font-weight:600;font-size:15px">Tissue Oxygenation</span></div>
+          <div style="text-align:right"><span id="oxygen-val" style="font-weight:700;font-size:18px;color:#6366F1">50</span><span style="font-size:11px;color:#94A3B8;margin-left:4px">↓ hypoxic</span></div>
+        </div>
+        <input type="range" min="0" max="100" value="50" class="slider-track" id="oxygen-slider" oninput="updateSliders()" style="background:linear-gradient(to right,#6366F1 50%,var(--silver) 50%)">
+      </div>
+    </div>
+    <div id="risk-box" style="background:#14B8A612;border:1.5px solid #14B8A630;border-radius:16px;padding:20px 24px;display:flex;justify-content:space-between;align-items:center;transition:all .4s ease">
+      <div>
+        <div style="font-size:12px;font-weight:600;color:#64748B;margin-bottom:4px">METABOLIC RISK SCORE</div>
+        <div class="serif" id="risk-score" style="font-size:32px;color:#14B8A6;line-height:1">50</div>
+        <div style="font-size:13px;color:#64748B;margin-top:4px">out of 100</div>
+      </div>
+      <div id="risk-label-badge" style="background:#14B8A620;border-radius:100px;padding:8px 18px;font-weight:700;color:#14B8A6;font-size:14px">Low Risk</div>
+    </div>
+  </div>
+</section>
+
+<!-- 3. WHY LACTATE -->
+<section id="why-lactate" style="background:var(--ivory)">
+  <div class="section-inner">
+    <p class="section-label" style="margin-bottom:12px">03 — The Lactate Signal</p>
+    <h2 class="serif" style="font-size:clamp(24px,5vw,38px);line-height:1.2;margin-bottom:8px">Why lactate tells the story</h2>
+    <p style="color:#64748B;font-size:15px;line-height:1.7;margin-bottom:32px">Lactate is your body's metabolic distress signal — produced when cells can't get enough oxygen or metabolize glucose normally.</p>
+    <div style="background:white;border-radius:20px;padding:24px 20px;margin-bottom:16px;border:1px solid var(--silver)">
+      <div style="font-size:12px;font-weight:700;letter-spacing:.08em;color:#14B8A6;margin-bottom:16px">✓ NORMAL PATHWAY</div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <div id="np0" style="background:#F9731615;border:1.5px solid #F9731640;border-radius:10px;padding:8px 14px;display:flex;align-items:center;gap:6px;opacity:.3;transition:opacity .5s ease"><span style="font-size:14px">⬡</span><span style="font-weight:600;font-size:13px;color:#F97316">Glucose</span></div>
+        <span style="color:#CBD5E1;font-weight:300;font-size:18px">→</span>
+        <div id="np1" style="background:#6366F115;border:1.5px solid #6366F140;border-radius:10px;padding:8px 14px;display:flex;align-items:center;gap:6px;opacity:.3;transition:opacity .5s ease"><span style="font-size:14px">◈</span><span style="font-weight:600;font-size:13px;color:#6366F1">Pyruvate</span></div>
+        <span style="color:#CBD5E1;font-weight:300;font-size:18px">→</span>
+        <div id="np2" style="background:#14B8A615;border:1.5px solid #14B8A640;border-radius:10px;padding:8px 14px;display:flex;align-items:center;gap:6px;opacity:.3;transition:opacity .5s ease"><span style="font-size:14px">⚡</span><span style="font-weight:600;font-size:13px;color:#14B8A6">ATP</span></div>
+      </div>
+      <p style="margin-top:12px;font-size:13px;color:#64748B">Cells efficiently convert glucose → energy with adequate oxygen.</p>
+    </div>
+    <div style="background:#EF444408;border-radius:20px;padding:24px 20px;border:1px solid #EF444420">
+      <div style="font-size:12px;font-weight:700;letter-spacing:.08em;color:#EF4444;margin-bottom:16px">⚠ DISRUPTED PATHWAY</div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <div style="background:#F9731615;border:1.5px solid #F9731640;border-radius:10px;padding:8px 14px;display:flex;align-items:center;gap:6px"><span style="font-size:14px">⬡</span><span style="font-weight:600;font-size:13px;color:#F97316">Glucose</span></div>
+        <span style="color:#CBD5E1;font-weight:300;font-size:18px">→</span>
+        <div style="background:#6366F115;border:1.5px solid #6366F140;border-radius:10px;padding:8px 14px;display:flex;align-items:center;gap:6px"><span style="font-size:14px">◈</span><span style="font-weight:600;font-size:13px;color:#6366F1">Pyruvate</span></div>
+        <span style="color:#EF4444;font-weight:700;font-size:18px">⟶</span>
+        <div style="background:#EF444415;border:1.5px solid #EF444440;border-radius:10px;padding:8px 14px;display:flex;align-items:center;gap:6px"><span style="font-size:14px">⬡</span><span style="font-weight:600;font-size:13px;color:#EF4444">Lactate ↑</span></div>
+      </div>
+      <p style="margin-top:12px;font-size:13px;color:#64748B">When oxygen is limited or metabolism is impaired, lactate accumulates as a byproduct.</p>
+    </div>
+    <div style="margin-top:24px;text-align:center;padding:20px;background:linear-gradient(135deg,#14B8A610,#6366F110);border-radius:16px">
+      <p style="font-size:14px;color:#475569;line-height:1.7">🩺 <strong style="color:#14B8A6">Lactate crosses into sweat</strong> in concentrations proportional to blood levels — making sweat an accessible, non-invasive window into your metabolic state.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 4. HIGH LACTATE -->
+<section id="high-lactate" style="background:white">
+  <div class="section-inner">
+    <p class="section-label" style="margin-bottom:12px">04 — Context Matters</p>
+    <h2 class="serif" style="font-size:clamp(24px,5vw,38px);line-height:1.2;margin-bottom:8px">High lactate ≠ one diagnosis</h2>
+    <p style="color:#64748B;font-size:15px;line-height:1.7;margin-bottom:28px">The same elevated lactate reading can mean very different things. Clinical context transforms a data point into insight.</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:24px">
+      <button class="choice-btn" id="btn-cardiovascular" onclick="selectInterp('cardiovascular')" style="border-color:#EF4444;color:#EF4444">♥ Cardiovascular Disease</button>
+      <button class="choice-btn" id="btn-diabetes" onclick="selectInterp('diabetes')">⬡ Metabolic Dysfunction</button>
+      <button class="choice-btn" id="btn-fatigue" onclick="selectInterp('fatigue')">⚡ Physiological Fatigue</button>
+    </div>
+    <div id="interp-box" style="background:#EF444408;border:1.5px solid #EF444425;border-radius:20px;padding:24px 20px;animation:fadeUp .4s ease">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px">
+        <h3 id="interp-title" style="font-size:18px;font-weight:600;color:#EF4444">♥ Cardiovascular Disease</h3>
+        <div style="text-align:right"><div style="font-size:10px;color:#94A3B8;letter-spacing:.08em">LACTATE SPECIFICITY</div><div id="interp-cert" style="font-size:20px;font-weight:700;color:#EF4444">68%</div></div>
+      </div>
+      <p id="interp-body" style="color:#475569;font-size:14px;line-height:1.75;margin-bottom:16px">Elevated lactate in CVD often reflects poor cardiac output, reduced tissue perfusion, or ischemia. The heart muscle itself can become lactate-producing rather than consuming — a key marker of heart failure severity.</p>
+      <div id="interp-indicators" style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:center;gap:10px"><div style="width:6px;height:6px;border-radius:50%;background:#EF4444;flex-shrink:0"></div><span style="font-size:13px;color:#475569">Elevated resting lactate >2.0 mmol/L</span></div>
+        <div style="display:flex;align-items:center;gap:10px"><div style="width:6px;height:6px;border-radius:50%;background:#EF4444;flex-shrink:0"></div><span style="font-size:13px;color:#475569">Reduced cardiac output</span></div>
+        <div style="display:flex;align-items:center;gap:10px"><div style="width:6px;height:6px;border-radius:50%;background:#EF4444;flex-shrink:0"></div><span style="font-size:13px;color:#475569">Peripheral ischemia signs</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 5. WHY MORE DATA -->
+<section id="why-more-data" style="background:var(--ivory)">
+  <div class="section-inner">
+    <p class="section-label" style="margin-bottom:12px">05 — The Limitation</p>
+    <h2 class="serif" style="font-size:clamp(24px,5vw,38px);line-height:1.2;margin-bottom:8px">Why lactate alone isn't enough</h2>
+    <p style="color:#64748B;font-size:15px;line-height:1.7;margin-bottom:32px">Powerful as it is, sweat lactate is one piece of a complex puzzle. Robust screening requires multiple data dimensions.</p>
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div class="card-hover" style="background:white;border-radius:16px;padding:20px;border:1px solid var(--silver);display:flex;gap:16px;align-items:flex-start"><div style="width:44px;height:44px;border-radius:12px;background:var(--ivory);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">🔁</div><div><h4 style="font-weight:600;margin-bottom:6px;font-size:15px">Confounding Variables</h4><p style="color:#64748B;font-size:13px;line-height:1.7">Exercise, diet, stress, and medications all independently elevate lactate, making isolated readings ambiguous.</p></div></div>
+      <div class="card-hover" style="background:white;border-radius:16px;padding:20px;border:1px solid var(--silver);display:flex;gap:16px;align-items:flex-start"><div style="width:44px;height:44px;border-radius:12px;background:var(--ivory);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">📍</div><div><h4 style="font-weight:600;margin-bottom:6px;font-size:15px">No Disease Specificity</h4><p style="color:#64748B;font-size:13px;line-height:1.7">Lactate elevation is a non-specific signal. Without supporting biomarkers, a definitive diagnosis cannot be made.</p></div></div>
+      <div class="card-hover" style="background:white;border-radius:16px;padding:20px;border:1px solid var(--silver);display:flex;gap:16px;align-items:flex-start"><div style="width:44px;height:44px;border-radius:12px;background:var(--ivory);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">🧠</div><div><h4 style="font-weight:600;margin-bottom:6px;font-size:15px">Missing the Cognitive Link</h4><p style="color:#64748B;font-size:13px;line-height:1.7">Cardiometabolic disorders significantly impair cognitive function — a dimension lactate alone cannot capture.</p></div></div>
+      <div class="card-hover" style="background:white;border-radius:16px;padding:20px;border:1px solid var(--silver);display:flex;gap:16px;align-items:flex-start"><div style="width:44px;height:44px;border-radius:12px;background:var(--ivory);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">📈</div><div><h4 style="font-weight:600;margin-bottom:6px;font-size:15px">Threshold Variability</h4><p style="color:#64748B;font-size:13px;line-height:1.7">"Normal" lactate ranges differ by age, fitness level, and individual baseline — static thresholds risk misclassification.</p></div></div>
+    </div>
+    <div style="margin-top:24px;padding:18px 20px;background:linear-gradient(135deg,#6366F115,#14B8A610);border-radius:16px">
+      <p style="font-size:14px;color:#475569;line-height:1.7">💡 <strong style="color:#6366F1">Solution:</strong> Pairing sweat lactate with <strong>cognitive performance testing</strong> creates a two-dimensional biomarker profile — metabolic + neurological — substantially improving diagnostic utility.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 6. COGNITIVE TESTS -->
+<section id="cognitive" style="background:white">
+  <div class="section-inner">
+    <p class="section-label" style="margin-bottom:12px">06 — Cognitive Assessment</p>
+    <h2 class="serif" style="font-size:clamp(24px,5vw,38px);line-height:1.2;margin-bottom:8px">Test your cognitive profile</h2>
+    <p style="color:#64748B;font-size:15px;line-height:1.7;margin-bottom:28px">Cardiometabolic disorders impair attention, memory, and processing speed. Complete all three tests to generate your cognitive score.</p>
+    <div style="display:flex;gap:10px;margin-bottom:24px;flex-wrap:wrap">
+      <button class="choice-btn" id="cog-btn-reaction" onclick="openTest('reaction')">⚡ Reaction Time</button>
+      <button class="choice-btn" id="cog-btn-stroop" onclick="openTest('stroop')">🎨 Stroop Test</button>
+      <button class="choice-btn" id="cog-btn-memory" onclick="openTest('memory')">🧠 Memory Recall</button>
+    </div>
+    <div id="cog-panel" style="display:none"></div>
+    <div id="cog-scores-box" style="display:none;margin-top:24px;background:#6366F108;border-radius:16px;padding:20px;border:1px solid #6366F120">
+      <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px" id="cog-scores-inner"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 7. ANALYSIS SYSTEM -->
+<section id="analysis" style="background:var(--ivory)">
+  <div class="section-inner">
+    <p class="section-label" style="margin-bottom:12px">07 — Integrated Analysis</p>
+    <h2 class="serif" style="font-size:clamp(24px,5vw,38px);line-height:1.2;margin-bottom:8px">Combine your biomarkers</h2>
+    <p style="color:#64748B;font-size:15px;line-height:1.7;margin-bottom:28px">Enter your sweat lactate level to combine with your cognitive assessment for an integrated risk interpretation.</p>
+    <div style="background:white;border-radius:20px;padding:24px 20px;border:1px solid var(--silver);margin-bottom:20px">
+      <div style="margin-bottom:20px">
+        <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:8px">Sweat Lactate Level (mmol/L)</label>
+        <div style="display:flex;gap:12px">
+          <input type="number" step="0.1" min="0" max="20" id="lactate-input" placeholder="e.g. 2.4" style="flex:1;padding:12px 16px;border-radius:12px;border:1.5px solid var(--silver);font-size:16px;font-family:'DM Sans',sans-serif;background:var(--ivory)">
+          <button class="btn-primary" onclick="runAnalysis()" style="font-size:14px;padding:12px 24px;white-space:nowrap">Analyze</button>
+        </div>
+        <p style="margin-top:8px;font-size:12px;color:#94A3B8">Normal range: 0.5 – 1.8 mmol/L at rest</p>
+      </div>
+      <div style="border-top:1px solid var(--silver);padding-top:16px">
+        <div style="display:flex;gap:12px">
+          <div style="flex:1;background:var(--ivory);border-radius:10px;padding:12px"><div style="font-size:11px;color:#94A3B8;margin-bottom:4px">LACTATE</div><div style="font-weight:700;font-size:18px"><span id="analysis-lactate-display">—</span> <span style="font-size:12px;font-weight:400;color:#64748B">mmol/L</span></div></div>
+          <div style="flex:1;background:var(--ivory);border-radius:10px;padding:12px"><div style="font-size:11px;color:#94A3B8;margin-bottom:4px">COGNITIVE SCORE</div><div style="font-weight:700;font-size:18px"><span id="analysis-cog-display">—</span> <span style="font-size:12px;font-weight:400;color:#64748B">/100</span></div></div>
+        </div>
+      </div>
+    </div>
+    <div id="analysis-result" style="display:none"></div>
+  </div>
+</section>
+
+<!-- 8. DASHBOARD -->
+<section id="dashboard" style="background:white">
+  <div class="section-inner">
+    <p class="section-label" style="margin-bottom:12px">08 — Risk Dashboard</p>
+    <h2 class="serif" style="font-size:clamp(24px,5vw,38px);line-height:1.2;margin-bottom:8px">Your metabolic risk gauge</h2>
+    <p style="color:#64748B;font-size:15px;line-height:1.7;margin-bottom:28px">A real-time visualization of your integrated cardiometabolic risk profile.</p>
+    <div style="background:var(--ivory);border-radius:20px;padding:32px 20px;border:1px solid var(--silver);text-align:center">
+      <svg id="gauge-svg" width="180" height="120" viewBox="0 0 180 120" style="overflow:visible;margin-bottom:8px">
+        <path id="gauge-bg" fill="none" stroke="#E2E8F0" stroke-width="10" stroke-linecap="round"></path>
+        <path id="gauge-fill" fill="none" stroke="#14B8A6" stroke-width="10" stroke-linecap="round" style="transition:all .8s cubic-bezier(.4,0,.2,1)"></path>
+        <text id="gauge-num" x="90" y="86" text-anchor="middle" fill="#14B8A6" font-family="DM Serif Display" font-size="28" font-weight="bold">0</text>
+        <text x="90" y="104" text-anchor="middle" fill="#94A3B8" font-family="DM Sans" font-size="11">RISK INDEX</text>
+      </svg>
+      <div id="gauge-label" style="display:inline-block;padding:6px 20px;border-radius:100px;background:#14B8A615;color:#14B8A6;font-weight:700;font-size:15px;margin-bottom:20px">Low Risk</div>
+      <div style="text-align:left;margin-top:8px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:10px">
+          <span style="font-size:13px;font-weight:600">Simulate Lactate</span>
+          <span id="dash-lac-val" style="font-weight:700;color:#14B8A6">2.2 mmol/L</span>
+        </div>
+        <input type="range" min="0.5" max="8" step="0.1" value="2.2" class="slider-track" id="dash-slider" oninput="updateDashboard()" style="background:linear-gradient(to right,#14B8A6 22%,var(--silver) 22%)">
+        <div style="display:flex;justify-content:space-between;margin-top:6px"><span style="font-size:11px;color:#94A3B8">0.5 (Low)</span><span style="font-size:11px;color:#94A3B8">8.0 (High)</span></div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px">
+      <div style="background:var(--ivory);border-radius:14px;padding:16px;border:1px solid var(--silver)"><div style="font-size:11px;color:#94A3B8;margin-bottom:4px;font-weight:600;letter-spacing:.06em">LACTATE</div><div id="dash-metric-lac" style="font-size:17px;font-weight:700;color:#14B8A6">2.2 mmol/L</div></div>
+      <div style="background:var(--ivory);border-radius:14px;padding:16px;border:1px solid var(--silver)"><div style="font-size:11px;color:#94A3B8;margin-bottom:4px;font-weight:600;letter-spacing:.06em">COGNITIVE SCORE</div><div id="dash-metric-cog" style="font-size:17px;font-weight:700;color:#6366F1">65/100</div></div>
+      <div style="background:var(--ivory);border-radius:14px;padding:16px;border:1px solid var(--silver)"><div style="font-size:11px;color:#94A3B8;margin-bottom:4px;font-weight:600;letter-spacing:.06em">RISK CATEGORY</div><div id="dash-metric-risk" style="font-size:17px;font-weight:700;color:#14B8A6">Low</div></div>
+      <div style="background:var(--ivory);border-radius:14px;padding:16px;border:1px solid var(--silver)"><div style="font-size:11px;color:#94A3B8;margin-bottom:4px;font-weight:600;letter-spacing:.06em">CONFIDENCE</div><div id="dash-metric-conf" style="font-size:17px;font-weight:700;color:#14B8A6">Moderate</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 9. DEVICE SIMULATION -->
+<section id="device" style="background:var(--ivory)">
+  <div class="section-inner">
+    <p class="section-label" style="margin-bottom:12px">09 — Biosensor Architecture</p>
+    <h2 class="serif" style="font-size:clamp(24px,5vw,38px);line-height:1.2;margin-bottom:8px">The SPE biosensor, visualized</h2>
+    <p style="color:#64748B;font-size:15px;line-height:1.7;margin-bottom:28px">A Screen-Printed Electrode (SPE) with lactate oxidase enzyme converts sweat lactate directly into a measurable electrical signal.</p>
+    <div style="background:white;border-radius:20px;padding:28px 20px;border:1px solid var(--silver);margin-bottom:20px">
+      <svg viewBox="0 0 300 140" width="100%" style="margin-bottom:20px">
+        <rect x="20" y="90" width="260" height="30" rx="4" fill="#E2E8F0"></rect>
+        <text x="150" y="110" text-anchor="middle" fill="#94A3B8" font-size="10" font-family="DM Sans">Flexible Polymer Substrate</text>
+        <rect x="30" y="60" width="60" height="34" rx="4" fill="#E2E8F0"></rect>
+        <text x="60" y="52" text-anchor="middle" fill="#64748B" font-size="9" font-family="DM Sans">Counter</text>
+        <text x="60" y="78" text-anchor="middle" fill="#64748B" font-size="8" font-family="DM Sans">CE</text>
+        <rect x="120" y="60" width="60" height="34" rx="4" fill="#C084FC30" stroke="#C084FC" stroke-width="1"></rect>
+        <text x="150" y="52" text-anchor="middle" fill="#9333EA" font-size="9" font-family="DM Sans">Reference</text>
+        <text x="150" y="78" text-anchor="middle" fill="#9333EA" font-size="8" font-family="DM Sans">Ag/AgCl</text>
+        <rect x="210" y="60" width="60" height="34" rx="4" fill="#14B8A625" stroke="#14B8A6" stroke-width="1.5"></rect>
+        <text x="240" y="52" text-anchor="middle" fill="#14B8A6" font-size="9" font-family="DM Sans">Working</text>
+        <text x="240" y="76" text-anchor="middle" fill="#14B8A6" font-size="8" font-family="DM Sans">LOx</text>
+        <text x="240" y="87" text-anchor="middle" fill="#14B8A6" font-size="8" font-family="DM Sans">enzyme</text>
+        <ellipse id="sweat1" cx="240" cy="58" rx="8" ry="5" fill="#6366F140" style="display:none"></ellipse>
+        <ellipse id="sweat2" cx="228" cy="55" rx="5" ry="4" fill="#6366F130" style="display:none"></ellipse>
+        <g id="signal-arrow" style="display:none">
+          <line x1="240" y1="60" x2="240" y2="20" stroke="#F97316" stroke-width="2" stroke-dasharray="4 2"></line>
+          <polygon points="236,24 244,24 240,14" fill="#F97316"></polygon>
+          <text x="260" y="22" fill="#F97316" font-size="9" font-family="DM Sans">Signal</text>
+        </g>
+      </svg>
+      <div style="display:flex;flex-direction:column;gap:10px" id="sim-steps">
+        <div class="sim-step" style="display:flex;align-items:center;gap:12px;opacity:.3;transition:opacity .5s ease"><div style="width:24px;height:24px;border-radius:50%;background:var(--silver);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:white;flex-shrink:0;transition:background .4s ease">1</div><span style="font-size:13px;color:#94A3B8">Sweat collected on electrode surface</span></div>
+        <div class="sim-step" style="display:flex;align-items:center;gap:12px;opacity:.3;transition:opacity .5s ease"><div style="width:24px;height:24px;border-radius:50%;background:var(--silver);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:white;flex-shrink:0;transition:background .4s ease">2</div><span style="font-size:13px;color:#94A3B8">Lactate oxidase enzyme reacts with lactate</span></div>
+        <div class="sim-step" style="display:flex;align-items:center;gap:12px;opacity:.3;transition:opacity .5s ease"><div style="width:24px;height:24px;border-radius:50%;background:var(--silver);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:white;flex-shrink:0;transition:background .4s ease">3</div><span style="font-size:13px;color:#94A3B8">Electron transfer generates current</span></div>
+        <div class="sim-step" style="display:flex;align-items:center;gap:12px;opacity:.3;transition:opacity .5s ease"><div style="width:24px;height:24px;border-radius:50%;background:var(--silver);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:white;flex-shrink:0;transition:background .4s ease">4</div><span style="font-size:13px;color:#94A3B8">Amperometric signal measured</span></div>
+        <div class="sim-step" style="display:flex;align-items:center;gap:12px;opacity:.3;transition:opacity .5s ease"><div style="width:24px;height:24px;border-radius:50%;background:var(--silver);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:white;flex-shrink:0;transition:background .4s ease">5</div><span style="font-size:13px;color:#94A3B8">Concentration calculated &amp; transmitted</span></div>
+      </div>
+    </div>
+    <button class="btn-primary" id="sim-btn" onclick="runSimulation()">▶ Run Simulation</button>
+  </div>
+</section>
+
+<!-- 10. SCIENTIFIC BASIS -->
+<section id="science" style="background:white">
+  <div class="section-inner">
+    <p class="section-label" style="margin-bottom:12px">10 — Scientific Foundation</p>
+    <h2 class="serif" style="font-size:clamp(24px,5vw,38px);line-height:1.2;margin-bottom:8px">The research behind it</h2>
+    <p style="color:#64748B;font-size:15px;line-height:1.7;margin-bottom:32px">Grounded in peer-reviewed literature across analytical chemistry, bioelectronics, and clinical metabolomics.</p>
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div class="card-hover" style="background:var(--ivory);border-radius:16px;padding:20px;border:1px solid var(--silver)"><div style="display:flex;gap:14px"><div style="width:42px;height:42px;border-radius:12px;background:white;border:1px solid var(--silver);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">⚗</div><div><h4 style="font-weight:600;font-size:15px;margin-bottom:6px">Lactate Oxidase Catalysis</h4><p style="color:#475569;font-size:13px;line-height:1.75;margin-bottom:8px">LOx enzyme catalyzes: Lactate + O₂ → Pyruvate + H₂O₂. The hydrogen peroxide is electrochemically oxidized at the working electrode, producing a current proportional to lactate concentration.</p><span style="font-size:11px;color:#14B8A6;font-weight:600">📄 Heikenfeld et al., Lab Chip 2018</span></div></div></div>
+      <div class="card-hover" style="background:var(--ivory);border-radius:16px;padding:20px;border:1px solid var(--silver)"><div style="display:flex;gap:14px"><div style="width:42px;height:42px;border-radius:12px;background:white;border:1px solid var(--silver);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">💧</div><div><h4 style="font-weight:600;font-size:15px;margin-bottom:6px">Sweat-Blood Correlation</h4><p style="color:#475569;font-size:13px;line-height:1.75;margin-bottom:8px">Sweat lactate correlates with blood lactate across physiological ranges (0.5–10 mmol/L), though sweat concentration is typically 1.5–3× higher. Calibration algorithms correct for this offset.</p><span style="font-size:11px;color:#14B8A6;font-weight:600">📄 Mena-Bravo et al., Anal. Chim. Acta 2014</span></div></div></div>
+      <div class="card-hover" style="background:var(--ivory);border-radius:16px;padding:20px;border:1px solid var(--silver)"><div style="display:flex;gap:14px"><div style="width:42px;height:42px;border-radius:12px;background:white;border:1px solid var(--silver);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🧬</div><div><h4 style="font-weight:600;font-size:15px;margin-bottom:6px">Cognitive-Metabolic Link</h4><p style="color:#475569;font-size:13px;line-height:1.75;margin-bottom:8px">Insulin resistance and impaired cerebral glucose metabolism co-occur in T2DM and CVD, reducing processing speed, working memory, and executive function — measurable via validated cognitive tasks.</p><span style="font-size:11px;color:#14B8A6;font-weight:600">📄 Biessels &amp; Despa, Nat Rev Neurol 2018</span></div></div></div>
+      <div class="card-hover" style="background:var(--ivory);border-radius:16px;padding:20px;border:1px solid var(--silver)"><div style="display:flex;gap:14px"><div style="width:42px;height:42px;border-radius:12px;background:white;border:1px solid var(--silver);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">📡</div><div><h4 style="font-weight:600;font-size:15px;margin-bottom:6px">Wearable Integration</h4><p style="color:#475569;font-size:13px;line-height:1.75;margin-bottom:8px">Modern flexible electronics enable real-time sweat sampling with microfluidic channels, on-chip analog front-ends, and Bluetooth transmission — enabling continuous ambulatory monitoring.</p><span style="font-size:11px;color:#14B8A6;font-weight:600">📄 Gao et al., Nature 2016</span></div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 11. IMPACT -->
+<section id="impact" style="background:var(--ivory)">
+  <div class="section-inner">
+    <p class="section-label" style="margin-bottom:12px">11 — Real-World Impact</p>
+    <h2 class="serif" style="font-size:clamp(24px,5vw,38px);line-height:1.2;margin-bottom:8px">Why this matters</h2>
+    <p style="color:#64748B;font-size:15px;line-height:1.7;margin-bottom:32px">Cardiometabolic disease is a global crisis. Accessible, continuous, non-invasive monitoring could reshape preventive medicine.</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+      <div class="card-hover" style="background:white;border-radius:18px;padding:20px 16px;border:1px solid var(--silver);text-align:center"><div style="font-size:28px;margin-bottom:10px">🌍</div><div class="serif" style="font-size:22px;color:#14B8A6;margin-bottom:4px">17M+</div><div style="font-weight:600;font-size:12px;color:#0F172A;margin-bottom:8px">deaths from CVD annually</div><p style="font-size:11px;color:#94A3B8;line-height:1.6">Early detection could prevent a significant proportion through timely intervention.</p></div>
+      <div class="card-hover" style="background:white;border-radius:18px;padding:20px 16px;border:1px solid var(--silver);text-align:center"><div style="font-size:28px;margin-bottom:10px">💰</div><div class="serif" style="font-size:22px;color:#14B8A6;margin-bottom:4px">~$760B</div><div style="font-weight:600;font-size:12px;color:#0F172A;margin-bottom:8px">annual diabetes cost (US)</div><p style="font-size:11px;color:#94A3B8;line-height:1.6">Non-invasive monitoring reduces costly late-stage complication management.</p></div>
+      <div class="card-hover" style="background:white;border-radius:18px;padding:20px 16px;border:1px solid var(--silver);text-align:center"><div style="font-size:28px;margin-bottom:10px">👆</div><div class="serif" style="font-size:22px;color:#14B8A6;margin-bottom:4px">Non-invasive</div><div style="font-weight:600;font-size:12px;color:#0F172A;margin-bottom:8px">no needles, no labs</div><p style="font-size:11px;color:#94A3B8;line-height:1.6">Sweat-based testing eliminates barriers to regular monitoring in low-resource settings.</p></div>
+      <div class="card-hover" style="background:white;border-radius:18px;padding:20px 16px;border:1px solid var(--silver);text-align:center"><div style="font-size:28px;margin-bottom:10px">⚡</div><div class="serif" style="font-size:22px;color:#14B8A6;margin-bottom:4px">&lt; 5 min</div><div style="font-weight:600;font-size:12px;color:#0F172A;margin-bottom:8px">full assessment time</div><p style="font-size:11px;color:#94A3B8;line-height:1.6">Rapid biosensor + cognitive test enables opportunistic screening in clinical workflows.</p></div>
+    </div>
+    <div style="margin-top:24px;background:linear-gradient(135deg,#0F172A,#1E3A5F);border-radius:20px;padding:28px 24px;color:white;text-align:center">
+      <p class="serif" style="font-size:20px;line-height:1.5;margin-bottom:12px">"The future of metabolic health is not in the clinic — it's on your skin."</p>
+      <p style="font-size:13px;color:#94A3B8;line-height:1.7">Integrating sweat biosensing with cognitive biomarkers represents the next frontier in personalized, continuous, preventive cardiometabolic care.</p>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer style="background:#0F172A;color:white;padding:48px 20px;text-align:center">
+  <div style="width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#14B8A6,#6366F1);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:20px">💧</div>
+  <div class="serif" style="font-size:22px;margin-bottom:8px">LactoSense</div>
+  <p style="color:#64748B;font-size:13px;margin-bottom:24px">Sweat-Based Cardiometabolic Early Detection</p>
+  <div style="border-top:1px solid #1E293B;padding-top:24px;max-width:400px;margin:0 auto">
+    <p style="font-size:15px;font-weight:600;margin-bottom:6px">Naufa Nufail &amp; Keishya Aghni</p>
+    <p style="color:#64748B;font-size:13px;line-height:1.8">Faculty of Medicine<br>Universitas Diponegoro<br>2026</p>
+  </div>
+  <p style="margin-top:24px;font-size:11px;color:#334155">For educational and research purposes only. Not a medical device.</p>
+</footer>
+
+<script>
+// ─── GLOBAL STATE ─────────────────────────────────────────────────────────────
+const cogScores = {};
+let cogTotalScore = null;
+
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
+function scrollTo(id) {
+  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+}
+
+// ─── NAVBAR ───────────────────────────────────────────────────────────────────
+window.addEventListener('scroll', () => {
+  const nav = document.getElementById('navbar');
+  const brand = document.getElementById('nav-brand');
+  if (window.scrollY > 40) {
+    nav.classList.add('scrolled');
+    brand.style.color = '#0F172A';
+  } else {
+    nav.classList.remove('scrolled');
+    brand.style.color = 'white';
+  }
+});
+
+// ─── HERO ANIMATION ───────────────────────────────────────────────────────────
+setTimeout(() => {
+  const drop = document.getElementById('hero-drop');
+  drop.style.opacity = '1';
+  drop.style.background = 'linear-gradient(135deg,#60b8ff,#a0d8ff)';
+}, 400);
+
+setTimeout(() => {
+  const drop = document.getElementById('hero-drop');
+  drop.style.background = 'linear-gradient(135deg,#14B8A6,#6366F1)';
+  drop.style.boxShadow = '0 0 30px #14B8A660';
+  document.getElementById('ripple1').style.display = 'block';
+  document.getElementById('ripple2').style.display = 'block';
+  document.getElementById('wave1').style.display = 'block';
+  document.getElementById('wave2').style.display = 'block';
+  document.getElementById('wave3').style.display = 'block';
+  document.getElementById('mol-dot').style.animation = 'pulseDot 1.5s ease-in-out infinite';
+}, 1200);
+
+// ─── CMD SWIPE DOTS ───────────────────────────────────────────────────────────
+const cmdScroll = document.getElementById('cmd-scroll');
+cmdScroll.addEventListener('scroll', () => {
+  const idx = Math.min(2, Math.round(cmdScroll.scrollLeft / (cmdScroll.offsetWidth - 40)));
+  document.querySelectorAll('#cmd-dots .nav-dot').forEach((d, i) => {
+    d.classList.toggle('active', i === idx);
+    d.style.background = i === idx ? '#14B8A6' : '#E2E8F0';
+  });
+});
+
+function cmdDot(i) {
+  cmdScroll.scrollTo({ left: i * (cmdScroll.offsetWidth - 40), behavior: 'smooth' });
+}
+
+// ─── METABOLIC SLIDERS ────────────────────────────────────────────────────────
+function updateSliders() {
+  const sugar = +document.getElementById('sugar-slider').value;
+  const activity = +document.getElementById('activity-slider').value;
+  const oxygen = +document.getElementById('oxygen-slider').value;
+
+  document.getElementById('sugar-val').textContent = sugar;
+  document.getElementById('activity-val').textContent = activity;
+  document.getElementById('oxygen-val').textContent = oxygen;
+
+  document.getElementById('sugar-slider').style.background =
+    `linear-gradient(to right,#F97316 ${sugar}%,var(--silver) ${sugar}%)`;
+  document.getElementById('activity-slider').style.background =
+    `linear-gradient(to right,#14B8A6 ${activity}%,var(--silver) ${activity}%)`;
+  document.getElementById('oxygen-slider').style.background =
+    `linear-gradient(to right,#6366F1 ${oxygen}%,var(--silver) ${oxygen}%)`;
+
+  const score = Math.round(sugar * 0.4 + (100 - activity) * 0.35 + (100 - oxygen) * 0.25);
+  const color = score < 35 ? '#14B8A6' : score < 60 ? '#F97316' : '#EF4444';
+  const label = score < 35 ? 'Low Risk' : score < 60 ? 'Moderate Risk' : 'High Risk';
+
+  document.getElementById('risk-score').textContent = score;
+  document.getElementById('risk-score').style.color = color;
+  document.getElementById('risk-box').style.background = color + '12';
+  document.getElementById('risk-box').style.borderColor = color + '30';
+  document.getElementById('risk-label-badge').textContent = label;
+  document.getElementById('risk-label-badge').style.background = color + '20';
+  document.getElementById('risk-label-badge').style.color = color;
+}
+
+// ─── LACTATE PATHWAY ANIMATION ────────────────────────────────────────────────
+let pathStep = 0;
+setInterval(() => {
+  pathStep = (pathStep + 1) % 4;
+  ['np0','np1','np2'].forEach((id, i) => {
+    document.getElementById(id).style.opacity = pathStep >= i ? '1' : '0.3';
+  });
+}, 1800);
+
+// ─── HIGH LACTATE INTERPRETATIONS ────────────────────────────────────────────
+const INTERPS = {
+  cardiovascular: {
+    color: '#EF4444', icon: '♥', title: 'Cardiovascular Disease', cert: '68%',
+    body: 'Elevated lactate in CVD often reflects poor cardiac output, reduced tissue perfusion, or ischemia. The heart muscle itself can become lactate-producing rather than consuming — a key marker of heart failure severity.',
+    indicators: ['Elevated resting lactate >2.0 mmol/L', 'Reduced cardiac output', 'Peripheral ischemia signs']
+  },
+  diabetes: {
+    color: '#F97316', icon: '⬡', title: 'Metabolic Dysfunction', cert: '55%',
+    body: 'In insulin-resistant states, impaired glucose uptake forces cells toward anaerobic metabolism. Additionally, some glucose-lowering medications (like metformin at high doses) can independently elevate lactate levels.',
+    indicators: ['Insulin resistance pattern', 'HbA1c correlation needed', 'Medication interaction possible']
+  },
+  fatigue: {
+    color: '#6366F1', icon: '⚡', title: 'Physiological Fatigue', cert: '40%',
+    body: 'Post-exercise or chronic fatigue syndrome shows elevated lactate due to mitochondrial dysfunction or overexertion. Importantly, athletic individuals may show elevated sweat lactate that reflects high aerobic performance — not pathology.',
+    indicators: ['Recent intense exercise?', 'Chronic fatigue syndrome?', 'Mitochondrial disorder?']
+  }
+};
+
+function selectInterp(key) {
+  const d = INTERPS[key];
+  ['cardiovascular','diabetes','fatigue'].forEach(k => {
+    const btn = document.getElementById('btn-' + k);
+    btn.style.borderColor = '';
+    btn.style.color = '';
+  });
+  document.getElementById('btn-' + key).style.borderColor = d.color;
+  document.getElementById('btn-' + key).style.color = d.color;
+
+  const box = document.getElementById('interp-box');
+  box.style.background = d.color + '08';
+  box.style.borderColor = d.color + '25';
+  document.getElementById('interp-title').style.color = d.color;
+  document.getElementById('interp-title').textContent = d.icon + ' ' + d.title;
+  document.getElementById('interp-cert').style.color = d.color;
+  document.getElementById('interp-cert').textContent = d.cert;
+  document.getElementById('interp-body').textContent = d.body;
+  document.getElementById('interp-indicators').innerHTML = d.indicators.map(ind =>
+    `<div style="display:flex;align-items:center;gap:10px"><div style="width:6px;height:6px;border-radius:50%;background:${d.color};flex-shrink:0"></div><span style="font-size:13px;color:#475569">${ind}</span></div>`
+  ).join('');
+
+  box.style.animation = 'none';
+  requestAnimationFrame(() => { box.style.animation = 'fadeUp 0.4s ease'; });
+}
+
+// ─── COGNITIVE TESTS ──────────────────────────────────────────────────────────
+let currentTest = null;
+// Reaction
+let rtPhase = 'idle', rtTarget = false, rtStart = null, rtTimer = null;
+// Stroop
+const STROOP_WORDS = [
+  {word:'RED',color:'blue',correct:'BLUE'},
+  {word:'GREEN',color:'red',correct:'RED'},
+  {word:'BLUE',color:'green',correct:'GREEN'},
+  {word:'YELLOW',color:'purple',correct:'PURPLE'}
+];
+let stroopIdx = 0, stroopCorrect = 0;
+// Memory
+const MEM_WORDS = ['APEX','CORE','SYNC','FLOW','MIND'];
+let memPhase = 'show', memTimer = null;
+
+function openTest(test) {
+  currentTest = test;
+  // Reset
+  rtPhase = 'idle'; rtTarget = false; rtStart = null;
+  if (rtTimer) clearTimeout(rtTimer);
+  stroopIdx = 0; stroopCorrect = 0;
+  memPhase = 'show';
+  if (memTimer) clearTimeout(memTimer);
+
+  const panel = document.getElementById('cog-panel');
+  panel.style.display = 'block';
+
+  ['reaction','stroop','memory'].forEach(k => {
+    const btn = document.getElementById('cog-btn-' + k);
+    const done = cogScores[k] !== undefined;
+    const isActive = k === test;
+    const colors = {reaction:'#F97316', stroop:'#6366F1', memory:'#14B8A6'};
+    const c = colors[k];
+    btn.style.borderColor = isActive ? c : done ? c + '60' : '';
+    btn.style.color = isActive ? c : done ? c + '80' : '';
+    btn.style.background = done ? c + '08' : '';
+    btn.innerHTML = (k==='reaction'?'⚡ Reaction Time':k==='stroop'?'🎨 Stroop Test':'🧠 Memory Recall') + (done ? ' <span style="font-size:12px">✓</span>' : '');
+  });
+
+  renderTest();
+}
+
+function renderTest() {
+  const panel = document.getElementById('cog-panel');
+  if (currentTest === 'reaction') renderReaction(panel);
+  else if (currentTest === 'stroop') renderStroop(panel);
+  else if (currentTest === 'memory') renderMemory(panel);
+}
+
+function renderReaction(panel) {
+  const bgColor = rtTarget ? '#14B8A6' : rtPhase === 'waiting' ? '#F97316' : '#E2E8F0';
+  const label = rtTarget ? 'TAP!' : rtPhase === 'waiting' ? '...' : rtPhase === 'tooearly' ? 'Too early' : '●';
+  const score = cogScores.reaction;
+  panel.innerHTML = `
+    <div style="background:var(--ivory);border-radius:20px;padding:32px 20px;text-align:center;border:1px solid var(--silver)">
+      <h4 style="font-weight:600;margin-bottom:8px">Reaction Time Test</h4>
+      <p style="color:#64748B;font-size:13px;margin-bottom:24px">Tap the circle the moment it turns green.</p>
+      <div onclick="handleRTClick()" style="width:120px;height:120px;border-radius:50%;margin:0 auto 24px;background:${bgColor};cursor:pointer;transition:background .15s ease;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:white;user-select:none">${label}</div>
+      ${score !== undefined ? `<p style="color:#14B8A6;font-weight:700;font-size:18px;margin-bottom:16px">⚡ Score: ${score}/100</p>` : ''}
+      ${rtPhase !== 'waiting' && rtPhase !== 'target' ? `<button class="btn-primary" onclick="startRT()" style="font-size:14px;padding:10px 24px">${rtPhase === 'idle' && score === undefined ? 'Start Test' : 'Try Again'}</button>` : ''}
+    </div>`;
+}
+
+function startRT() {
+  rtPhase = 'waiting'; rtTarget = false;
+  renderTest();
+  const delay = 1500 + Math.random() * 2500;
+  rtTimer = setTimeout(() => {
+    rtTarget = true; rtStart = Date.now(); rtPhase = 'target';
+    renderTest();
+  }, delay);
+}
+
+function handleRTClick() {
+  if (!rtTarget) {
+    rtPhase = 'tooearly'; renderTest();
+    setTimeout(() => { rtPhase = 'idle'; renderTest(); }, 1000);
+    return;
+  }
+  const ms = Date.now() - rtStart;
+  rtTarget = false; rtPhase = 'done';
+  const score = Math.max(0, Math.min(100, Math.round(100 - (ms - 150) / 5)));
+  cogScores.reaction = score;
+  renderTest();
+  updateCogScoresBox();
+  updateCogBtnDone('reaction', '#F97316');
+  checkAllCogDone();
+}
+
+function renderStroop(panel) {
+  const w = STROOP_WORDS[stroopIdx];
+  const done = cogScores.stroop !== undefined;
+  panel.innerHTML = `
+    <div style="background:var(--ivory);border-radius:20px;padding:32px 20px;text-align:center;border:1px solid var(--silver)">
+      <h4 style="font-weight:600;margin-bottom:4px">Stroop Color-Word Test</h4>
+      <p style="color:#64748B;font-size:13px;margin-bottom:24px">Select the <em>color of the text</em>, not the word it spells.</p>
+      ${done ? `<div style="font-size:32px;font-weight:700;color:#6366F1;margin-bottom:8px">${stroopCorrect}/${STROOP_WORDS.length}</div><p style="color:#64748B">Stroop Score: <strong>${cogScores.stroop}/100</strong></p>` : `
+        <div style="font-size:40px;font-weight:800;margin-bottom:8px;color:${w.color};font-family:'DM Serif Display',serif">${w.word}</div>
+        <p style="font-size:12px;color:#94A3B8;margin-bottom:20px">${stroopIdx+1} / ${STROOP_WORDS.length}</p>
+        <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+          ${['Red','Blue','Green','Purple'].map(c => `<button class="choice-btn" onclick="handleStroop('${c}')">${c}</button>`).join('')}
+        </div>`}
+    </div>`;
+}
+
+function handleStroop(answer) {
+  const w = STROOP_WORDS[stroopIdx];
+  if (answer.toUpperCase() === w.correct) stroopCorrect++;
+  stroopIdx++;
+  if (stroopIdx >= STROOP_WORDS.length) {
+    cogScores.stroop = Math.round(stroopCorrect / STROOP_WORDS.length * 100);
+    updateCogBtnDone('stroop', '#6366F1');
+    checkAllCogDone();
+  }
+  renderTest();
+  updateCogScoresBox();
+}
+
+function renderMemory(panel) {
+  if (memPhase === 'show') {
+    panel.innerHTML = `
+      <div style="background:var(--ivory);border-radius:20px;padding:32px 20px;text-align:center;border:1px solid var(--silver)">
+        <h4 style="font-weight:600;margin-bottom:4px">Working Memory Test</h4>
+        <p style="color:#64748B;font-size:13px;margin-bottom:20px">Memorize these words. You have 4 seconds.</p>
+        <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:16px">
+          ${MEM_WORDS.map(w => `<div style="background:#14B8A620;border-radius:10px;padding:8px 16px;font-weight:700;color:#14B8A6;font-size:16px">${w}</div>`).join('')}
+        </div>
+        <div style="color:#94A3B8;font-size:13px;animation:blinkCursor 1s infinite">Memorizing...</div>
+      </div>`;
+    if (memTimer) clearTimeout(memTimer);
+    memTimer = setTimeout(() => { memPhase = 'recall'; renderTest(); }, 4000);
+  } else if (cogScores.memory === undefined) {
+    panel.innerHTML = `
+      <div style="background:var(--ivory);border-radius:20px;padding:32px 20px;text-align:center;border:1px solid var(--silver)">
+        <h4 style="font-weight:600;margin-bottom:4px">Working Memory Test</h4>
+        <p style="color:#64748B;font-size:13px;margin-bottom:16px">Type the words you remember, separated by spaces.</p>
+        <input type="text" id="mem-input" placeholder="e.g. APEX FLOW CORE..." style="width:100%;padding:12px 16px;border-radius:12px;border:1.5px solid var(--silver);font-size:15px;font-family:'DM Sans',sans-serif;margin-bottom:16px;background:white">
+        <button class="btn-primary" onclick="handleMemoryRecall()" style="font-size:14px;padding:10px 24px">Submit</button>
+      </div>`;
+  } else {
+    const s = cogScores.memory;
+    const correct = Math.round(s / 100 * MEM_WORDS.length);
+    panel.innerHTML = `
+      <div style="background:var(--ivory);border-radius:20px;padding:32px 20px;text-align:center;border:1px solid var(--silver)">
+        <h4 style="font-weight:600;margin-bottom:4px">Working Memory Test</h4>
+        <div style="font-size:32px;font-weight:700;color:#14B8A6;margin-bottom:8px">${correct}/${MEM_WORDS.length}</div>
+        <p style="color:#64748B">Memory Score: <strong>${s}/100</strong></p>
+      </div>`;
+  }
+}
+
+function handleMemoryRecall() {
+  const input = document.getElementById('mem-input');
+  if (!input) return;
+  const recalled = input.value.toUpperCase().split(/[\s,]+/).filter(Boolean);
+  const correct = recalled.filter(w => MEM_WORDS.includes(w)).length;
+  cogScores.memory = Math.round(correct / MEM_WORDS.length * 100);
+  renderTest();
+  updateCogScoresBox();
+  updateCogBtnDone('memory', '#14B8A6');
+  checkAllCogDone();
+}
+
+function updateCogBtnDone(key, color) {
+  const labels = {reaction:'⚡ Reaction Time', stroop:'🎨 Stroop Test', memory:'🧠 Memory Recall'};
+  const btn = document.getElementById('cog-btn-' + key);
+  btn.style.background = color + '08';
+  btn.style.borderColor = color + '60';
+  btn.style.color = color + '80';
+  btn.innerHTML = labels[key] + ` <span style="font-size:12px;color:${color}">✓</span>`;
+}
+
+function updateCogScoresBox() {
+  const box = document.getElementById('cog-scores-box');
+  const inner = document.getElementById('cog-scores-inner');
+  if (Object.keys(cogScores).length === 0) { box.style.display = 'none'; return; }
+  box.style.display = 'block';
+  const labels = {reaction:'Reaction Time', stroop:'Stroop Test', memory:'Memory Recall'};
+  const colors = {reaction:'#F97316', stroop:'#6366F1', memory:'#14B8A6'};
+  let html = Object.keys(cogScores).map(k =>
+    `<div style="text-align:center"><div style="font-size:24px;font-weight:700;color:${colors[k]}">${cogScores[k]}</div><div style="font-size:11px;color:#64748B">${labels[k]}</div></div>`
+  ).join('');
+  if (Object.keys(cogScores).length === 3) {
+    const total = Math.round(cogScores.reaction * 0.35 + cogScores.stroop * 0.35 + cogScores.memory * 0.30);
+    html += `<div style="text-align:center"><div style="font-size:24px;font-weight:700;color:#6366F1">${total}</div><div style="font-size:11px;color:#64748B">Cognitive Score</div></div>`;
+  }
+  inner.innerHTML = html;
+}
+
+function checkAllCogDone() {
+  if (Object.keys(cogScores).length === 3) {
+    cogTotalScore = Math.round(cogScores.reaction * 0.35 + cogScores.stroop * 0.35 + cogScores.memory * 0.30);
+    document.getElementById('analysis-cog-display').textContent = cogTotalScore;
+    document.getElementById('dash-metric-cog').textContent = cogTotalScore + '/100';
+    document.getElementById('dash-metric-conf').textContent = 'High';
+    updateDashboard();
+  }
+}
+
+// ─── ANALYSIS ─────────────────────────────────────────────────────────────────
+function runAnalysis() {
+  const lacStr = document.getElementById('lactate-input').value;
+  const lac = parseFloat(lacStr);
+  if (isNaN(lac) || lac < 0) return;
+  const cog = cogTotalScore || 60;
+
+  document.getElementById('analysis-lactate-display').textContent = lac.toFixed(1);
+  document.getElementById('analysis-cog-display').textContent = cog;
+
+  let risk, color, interpretation, riskNum;
+  if (lac > 4.0 && cog < 50) {
+    risk = 'High'; color = '#EF4444'; riskNum = 85;
+    interpretation = 'Severely elevated lactate combined with impaired cognition strongly suggests significant metabolic-cardiovascular dysfunction. Urgent clinical evaluation is recommended.';
+  } else if (lac > 2.5 || cog < 55) {
+    risk = 'Moderate'; color = '#F97316'; riskNum = 55;
+    interpretation = 'Elevated lactate or reduced cognitive performance warrants further investigation. Consider clinical correlation with HbA1c, cardiac markers, and detailed metabolic panel.';
+  } else if (lac > 1.8) {
+    risk = 'Borderline'; color = '#EAB308'; riskNum = 35;
+    interpretation = 'Mildly elevated lactate with preserved cognition may reflect post-exercise state, dietary factors, or early metabolic changes. Monitor trends over time.';
+  } else {
+    risk = 'Normal'; color = '#14B8A6'; riskNum = 12;
+    interpretation = 'Lactate levels and cognitive performance are within normal ranges. Continued monitoring with healthy lifestyle practices is recommended.';
+  }
+
+  const box = document.getElementById('analysis-result');
+  box.style.display = 'block';
+  box.innerHTML = `
+    <div style="background:${color}10;border:1.5px solid ${color}30;border-radius:20px;padding:24px 20px;animation:fadeUp .4s ease">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div style="font-size:12px;font-weight:700;letter-spacing:.08em;color:#64748B">INTEGRATED ASSESSMENT</div>
+        <span class="tag" style="background:${color}20;color:${color}">${risk} Risk</span>
+      </div>
+      <p style="color:#475569;font-size:14px;line-height:1.75">${interpretation}</p>
+      <div style="margin-top:16px;height:6px;border-radius:9999px;background:var(--silver);overflow:hidden">
+        <div style="height:100%;border-radius:9999px;background:linear-gradient(to right,#14B8A6,${color});width:${riskNum}%;transition:width .8s cubic-bezier(.4,0,.2,1)"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:6px">
+        <span style="font-size:11px;color:#94A3B8">Normal</span>
+        <span style="font-size:11px;color:#94A3B8">High</span>
+      </div>
+    </div>`;
+}
+
+// ─── DASHBOARD GAUGE ──────────────────────────────────────────────────────────
+function toRad(d) { return d * Math.PI / 180; }
+function arcPath(r, cx, cy, start, end) {
+  const sx = cx + r * Math.cos(toRad(start)), sy = cy + r * Math.sin(toRad(start));
+  const ex = cx + r * Math.cos(toRad(end)),   ey = cy + r * Math.sin(toRad(end));
+  const large = (end - start) > 180 ? 1 : 0;
+  return `M ${sx} ${sy} A ${r} ${r} 0 ${large} 1 ${ex} ${ey}`;
+}
+
+function updateDashboard() {
+  const lac = +document.getElementById('dash-slider').value;
+  const cog = cogTotalScore || 65;
+  const riskPct = Math.min(100, Math.round((lac / 8 * 60) + ((100 - cog) * 0.4)));
+  const color = riskPct < 30 ? '#14B8A6' : riskPct < 60 ? '#F97316' : '#EF4444';
+  const label = riskPct < 30 ? 'Low' : riskPct < 60 ? 'Moderate' : 'High';
+  const pct = (lac - 0.5) / 7.5 * 100;
+
+  document.getElementById('dash-slider').style.background =
+    `linear-gradient(to right,${color} ${pct}%,var(--silver) ${pct}%)`;
+  document.getElementById('dash-lac-val').textContent = lac.toFixed(1) + ' mmol/L';
+  document.getElementById('dash-lac-val').style.color = color;
+  document.getElementById('dash-metric-lac').textContent = lac.toFixed(1) + ' mmol/L';
+  document.getElementById('dash-metric-lac').style.color = color;
+  document.getElementById('dash-metric-risk').textContent = label;
+  document.getElementById('dash-metric-risk').style.color = color;
+
+  const r = 70, cx = 90, cy = 90, startA = -210, endA = 30;
+  const filled = (riskPct / 100) * (endA - startA);
+  document.getElementById('gauge-bg').setAttribute('d', arcPath(r, cx, cy, startA, endA));
+  document.getElementById('gauge-fill').setAttribute('d', arcPath(r, cx, cy, startA, startA + filled));
+  document.getElementById('gauge-fill').style.stroke = color;
+  document.getElementById('gauge-fill').style.filter = `drop-shadow(0 0 6px ${color}50)`;
+  document.getElementById('gauge-num').textContent = riskPct;
+  document.getElementById('gauge-num').style.fill = color;
+  document.getElementById('gauge-label').textContent = label + ' Risk';
+  document.getElementById('gauge-label').style.background = color + '15';
+  document.getElementById('gauge-label').style.color = color;
+}
+
+// init gauge
+updateDashboard();
+
+// ─── DEVICE SIMULATION ────────────────────────────────────────────────────────
+let simRunning = false;
+
+function runSimulation() {
+  if (simRunning) return;
+  simRunning = true;
+  document.getElementById('sim-btn').disabled = true;
+  document.getElementById('sim-btn').textContent = 'Simulating...';
+
+  // Reset
+  document.querySelectorAll('.sim-step').forEach((el, i) => {
+    el.style.opacity = '0.3';
+    const dot = el.querySelector('div');
+    dot.style.background = 'var(--silver)';
+    el.querySelector('span').style.color = '#94A3B8';
+    el.querySelector('span').style.fontWeight = '400';
+  });
+  document.getElementById('sweat1').style.display = 'none';
+  document.getElementById('sweat2').style.display = 'none';
+  document.getElementById('signal-arrow').style.display = 'none';
+
+  const steps = document.querySelectorAll('.sim-step');
+  steps.forEach((el, i) => {
+    setTimeout(() => {
+      el.style.opacity = '1';
+      const dot = el.querySelector('div');
+      dot.style.background = '#14B8A6';
+      el.querySelector('span').style.color = '#0F172A';
+      el.querySelector('span').style.fontWeight = '500';
+      if (i === 0) { document.getElementById('sweat1').style.display = 'block'; document.getElementById('sweat2').style.display = 'block'; }
+      if (i === 3) { document.getElementById('signal-arrow').style.display = 'block'; }
+      if (i === steps.length - 1) {
+        setTimeout(() => {
+          simRunning = false;
+          document.getElementById('sim-btn').disabled = false;
+          document.getElementById('sim-btn').textContent = '▶ Run Simulation';
+        }, 800);
+      }
+    }, i * 1200);
+  });
+}
+
+// ─── INPUT SYNC ───────────────────────────────────────────────────────────────
+document.getElementById('lactate-input').addEventListener('input', function() {
+  const v = this.value;
+  document.getElementById('analysis-lactate-display').textContent = v || '—';
+});
+</script>
+</body>
+</html>
